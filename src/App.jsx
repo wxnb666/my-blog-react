@@ -1,35 +1,17 @@
 import { Button, Card, Tag } from "antd";
+import { useNavigate } from "react-router-dom";
+import { defaultArticles } from "@/data/articles";
 import "./App.css";
-
-const articles = [
-  {
-    title: "从零搭建 React 博客后台",
-    desc: "记录 Vite、Router、Redux 与 Ant Design 的基础组合，让项目结构更清晰。",
-    tag: "React",
-    date: "May 06",
-  },
-  {
-    title: "前端工程化里的那些小细节",
-    desc: "聊聊路径别名、目录拆分、构建优化和日常开发体验的取舍。",
-    tag: "工程化",
-    date: "Apr 28",
-  },
-  {
-    title: "写给自己的技术成长清单",
-    desc: "把学习节奏、项目复盘和问题记录沉淀成持续更新的博客内容。",
-    tag: "随笔",
-    date: "Apr 16",
-  },
-];
 
 const topics = ["React", "Redux", "Ant Design", "前端工程化", "生活随笔"];
 
 function App() {
+  const navigate = useNavigate();
+
   return (
     <main className="blog-home">
       <header className="blog-header">
         <div className="blog-brand">
-          <span className="blog-brand__logo">鑫</span>
           <div>
             <strong>鑫哥的博客</strong>
             <span>记录技术，也记录生活</span>
@@ -38,6 +20,9 @@ function App() {
 
         <nav className="blog-nav" aria-label="博客导航">
           <a href="#articles">文章</a>
+          <button type="button" onClick={() => navigate("/articles")}>
+            全部文章
+          </button>
           <a href="#topics">专题</a>
           <a href="#about">关于</a>
         </nav>
@@ -52,10 +37,12 @@ function App() {
             专题分类和个人主页能力。
           </p>
           <div className="blog-hero__actions">
-            <Button type="primary" size="large">
+            <Button type="primary" size="large" onClick={() => navigate("/articles/write")}>
               开始写文章
             </Button>
-            <Button size="large">查看全部文章</Button>
+            <Button size="large" onClick={() => navigate("/articles")}>
+              查看全部文章
+            </Button>
           </div>
         </div>
 
@@ -84,7 +71,7 @@ function App() {
         </div>
 
         <div className="article-grid">
-          {articles.map((article) => (
+          {defaultArticles.map((article) => (
             <article className="article-card" key={article.title}>
               <div className="article-card__meta">
                 <Tag color="geekblue">{article.tag}</Tag>
@@ -92,7 +79,9 @@ function App() {
               </div>
               <h3>{article.title}</h3>
               <p>{article.desc}</p>
-              <a href="#read-more">阅读全文</a>
+              <button type="button" onClick={() => navigate(`/articles/${article.id}`)}>
+                阅读全文
+              </button>
             </article>
           ))}
         </div>
