@@ -3,6 +3,7 @@ import App from "@/App";
 import { ArticleEditor } from "@/pages/articleEditor";
 import { ArticleDetail } from "@/pages/articleDetail";
 import { Articles } from "@/pages/articles";
+import { TopicArticles } from "@/pages/topicArticles";
 import { createBrowserRouter } from "react-router-dom";
 
 export const router = createBrowserRouter([
@@ -17,6 +18,10 @@ export const router = createBrowserRouter([
   {
     path: "/home",
     element: <App />,
+  },
+  {
+    path: "/topics/:slug",
+    element: <TopicArticles />,
   },
   {
     path: "/articles",

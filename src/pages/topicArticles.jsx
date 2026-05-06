@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, Empty, Spin, Tag } from "antd";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { request } from "@/api/client";
 import "./articles.css";
 
@@ -10,42 +10,58 @@ const getTextFromHtml = (html) => {
   return element.textContent || element.innerText || "";
 };
 
-export const Articles = () => {
+function TopicArticlesInner({ slug, titleFromNav }) {
   const navigate = useNavigate();
   const [articles, setArticles] = useState([]);
+  const [topicName, setTopicName] = useState(typeof titleFromNav === "string" ? titleFromNav : "");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const resolvedTitle = useMemo(() => topicName || slug || "专题", [topicName, slug]);
+
   useEffect(() => {
     let cancelled = false;
-    request("/api/articles")
-      .then((data) => {
-        if (!cancelled) setArticles(Array.isArray(data) ? data : []);
-      })
-      .catch((e) => {
+
+    const load = async () => {
+      try {
+        if (!titleFromNav) {
+          const topics = await request("/api/topics");
+          if (!cancelled && Array.isArray(topics)) {
+            const hit = topics.find((t) => t.slug === slug);
+            if (hit?.name) setTopicName(hit.name);
+          }
+        }
+        const data = await request(`/api/topics/${encodeURIComponent(slug)}/articles`);
+        if (!cancelled) {
+          setArticles(Array.isArray(data) ? data : []);
+          if (!titleFromNav && Array.isArray(data) && data[0]?.topicName) {
+            setTopicName(data[0].topicName);
+          }
+        }
+      } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "加载失败");
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setLoading(false);
-      });
+      }
+    };
+
+    load();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [slug, titleFromNav]);
 
   return (
     <main className="articles-page">
       <header className="articles-header">
         <div>
-          <span>All Posts</span>
-          <h1>鑫哥的全部文章</h1>
-          <p>文章列表由 Express + MySQL 接口拉取，请确保已启动 my-blog-node 并完成数据库初始化。</p>
+          <span>Topic</span>
+          <h1>{resolvedTitle}</h1>
+          <p>本页仅展示该专题下的文章。</p>
         </div>
         <div className="articles-header__actions">
           <Button onClick={() => navigate("/home")}>返回首页</Button>
-          <Button type="primary" onClick={() => navigate("/articles/write")}>
-            写新文章
-          </Button>
+          <Button onClick={() => navigate("/articles")}>全部文章</Button>
         </div>
       </header>
 
@@ -74,12 +90,24 @@ export const Articles = () => {
           ))}
         </section>
       ) : (
-        <Empty description="暂无文章">
+        <Empty description="该专题下暂无文章">
           <Button type="primary" onClick={() => navigate("/articles/write")}>
-            现在去写
+            写一篇
           </Button>
         </Empty>
       )}
     </main>
   );
-};
+}
+
+export function TopicArticles() {
+  const { slug } = useParams();
+  const location = useLocation();
+  const titleFromNav = location.state?.topicName;
+
+  if (!slug) {
+    return null;
+  }
+
+  return <TopicArticlesInner key={slug} slug={slug} titleFromNav={titleFromNav} />;
+}

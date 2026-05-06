@@ -86,8 +86,9 @@ export const ArticleEditor = () => {
                 options={[
                   { label: "React", value: "React" },
                   { label: "Redux", value: "Redux" },
-                  { label: "工程化", value: "工程化" },
-                  { label: "随笔", value: "随笔" },
+                  { label: "Ant Design", value: "Ant Design" },
+                  { label: "前端工程化", value: "前端工程化" },
+                  { label: "生活随笔", value: "生活随笔" },
                 ]}
               />
             </Form.Item>

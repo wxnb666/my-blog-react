@@ -4,25 +4,37 @@ import { useNavigate } from "react-router-dom";
 import { request } from "@/api/client";
 import "./App.css";
 
-const topics = ["React", "Redux", "Ant Design", "前端工程化", "生活随笔"];
-
 function App() {
   const navigate = useNavigate();
   const [latest, setLatest] = useState([]);
-  const [loadingLatest, setLoadingLatest] = useState(true);
+  const [topics, setTopics] = useState([]);
+  const [stats, setStats] = useState({ articleCount: 0, topicCount: 0, totalViews: 0 });
+  const [loadingHome, setLoadingHome] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
-    request("/api/articles?limit=3")
-      .then((data) => {
-        if (!cancelled && Array.isArray(data)) setLatest(data);
-      })
-      .catch(() => {
-        if (!cancelled) setLatest([]);
+
+    Promise.all([
+      request("/api/articles?limit=3").catch(() => []),
+      request("/api/topics").catch(() => []),
+      request("/api/stats").catch(() => null),
+    ])
+      .then(([latestData, topicsData, statsData]) => {
+        if (cancelled) return;
+        if (Array.isArray(latestData)) setLatest(latestData);
+        if (Array.isArray(topicsData)) setTopics(topicsData);
+        if (statsData && typeof statsData === "object") {
+          setStats({
+            articleCount: Number(statsData.articleCount) || 0,
+            topicCount: Number(statsData.topicCount) || 0,
+            totalViews: Number(statsData.totalViews) || 0,
+          });
+        }
       })
       .finally(() => {
-        if (!cancelled) setLoadingLatest(false);
+        if (!cancelled) setLoadingHome(false);
       });
+
     return () => {
       cancelled = true;
     };
@@ -71,15 +83,23 @@ function App() {
           <h2>鑫哥</h2>
           <p>前端开发者 / React 学习者 / 博客建设中</p>
           <div className="blog-profile__stats">
-            <span>
-              <strong>128+</strong>文章
-            </span>
-            <span>
-              <strong>36</strong>专题
-            </span>
-            <span>
-              <strong>7k+</strong>阅读
-            </span>
+            {loadingHome ? (
+              <span style={{ gridColumn: "1/-1" }}>
+                <Spin size="small" />
+              </span>
+            ) : (
+              <>
+                <span>
+                  <strong>{stats.articleCount}</strong>文章
+                </span>
+                <span>
+                  <strong>{stats.topicCount}</strong>专题
+                </span>
+                <span>
+                  <strong>{stats.totalViews}</strong>阅读
+                </span>
+              </>
+            )}
           </div>
         </Card>
       </section>
@@ -91,7 +111,7 @@ function App() {
         </div>
 
         <div className="article-grid">
-          {loadingLatest ? (
+          {loadingHome ? (
             <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "32px 0" }}>
               <Spin />
             </div>
@@ -103,6 +123,7 @@ function App() {
                 <div className="article-card__meta">
                   <Tag color="geekblue">{article.tag}</Tag>
                   <span>{article.date}</span>
+                  {article.viewCount != null ? <span>阅读 {article.viewCount}</span> : null}
                 </div>
                 <h3>{article.title}</h3>
                 <p>{article.desc}</p>
@@ -122,11 +143,28 @@ function App() {
         </div>
 
         <div className="topic-list">
-          {topics.map((topic) => (
-            <button type="button" key={topic}>
-              {topic}
-            </button>
-          ))}
+          {loadingHome ? (
+            <div style={{ padding: "16px 0" }}>
+              <Spin />
+            </div>
+          ) : topics.length === 0 ? (
+            <p>暂无专题数据，请运行后端并执行 npm run seed。</p>
+          ) : (
+            topics.map((topic) => (
+              <button
+                type="button"
+                key={topic.slug}
+                onClick={() =>
+                  navigate(`/topics/${encodeURIComponent(topic.slug)}`, {
+                    state: { topicName: topic.name },
+                  })
+                }
+              >
+                {topic.name}
+                {topic.articleCount != null ? `（${topic.articleCount}）` : ""}
+              </button>
+            ))
+          )}
         </div>
       </section>
     </main>
