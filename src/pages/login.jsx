@@ -1,9 +1,16 @@
 import { Button, Checkbox, Divider, Form, Input, Space, Typography } from "antd";
+import { useNavigate } from "react-router-dom";
 import "./login.css";
 
 const { Text, Title } = Typography;
 
 export const Login = () => {
+  const navigate = useNavigate();
+
+  const handleLogin = () => {
+    navigate("/");
+  };
+
   return (
     <main className="login-page">
       <section className="login-hero">
@@ -42,7 +49,7 @@ export const Login = () => {
           <Text type="secondary">登录鑫哥的博客，管理你的文章和灵感。</Text>
         </Space>
 
-        <Form layout="vertical" size="large" className="login-form">
+        <Form layout="vertical" size="large" className="login-form" onFinish={handleLogin}>
           <Form.Item
             label="账号"
             name="account"
