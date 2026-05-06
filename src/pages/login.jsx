@@ -1,14 +1,29 @@
-import { Button, Checkbox, Divider, Form, Input, Space, Typography } from "antd";
+import { Button, Checkbox, Divider, Form, Input, Space, Typography, message } from "antd";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { request } from "@/api/client";
 import "./login.css";
 
 const { Text, Title } = Typography;
 
 export const Login = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    navigate("/home");
+  const handleLogin = async (values) => {
+    setLoading(true);
+    try {
+      await request("/api/auth/login", {
+        method: "POST",
+        json: { account: values.account, password: values.password },
+      });
+      message.success("登录成功");
+      navigate("/home");
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : "登录失败");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -71,7 +86,7 @@ export const Login = () => {
             <a href="#forgot-password">忘记密码？</a>
           </div>
 
-          <Button type="primary" htmlType="submit" block className="login-form__submit">
+          <Button type="primary" htmlType="submit" block className="login-form__submit" loading={loading}>
             登录博客
           </Button>
         </Form>

@@ -1,12 +1,32 @@
-import { Button, Card, Tag } from "antd";
+import { Button, Card, Spin, Tag } from "antd";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { defaultArticles } from "@/data/articles";
+import { request } from "@/api/client";
 import "./App.css";
 
 const topics = ["React", "Redux", "Ant Design", "前端工程化", "生活随笔"];
 
 function App() {
   const navigate = useNavigate();
+  const [latest, setLatest] = useState([]);
+  const [loadingLatest, setLoadingLatest] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    request("/api/articles?limit=3")
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) setLatest(data);
+      })
+      .catch(() => {
+        if (!cancelled) setLatest([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingLatest(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="blog-home">
@@ -71,19 +91,27 @@ function App() {
         </div>
 
         <div className="article-grid">
-          {defaultArticles.map((article) => (
-            <article className="article-card" key={article.title}>
-              <div className="article-card__meta">
-                <Tag color="geekblue">{article.tag}</Tag>
-                <span>{article.date}</span>
-              </div>
-              <h3>{article.title}</h3>
-              <p>{article.desc}</p>
-              <button type="button" onClick={() => navigate(`/articles/${article.id}`)}>
-                阅读全文
-              </button>
-            </article>
-          ))}
+          {loadingLatest ? (
+            <div style={{ gridColumn: "1/-1", textAlign: "center", padding: "32px 0" }}>
+              <Spin />
+            </div>
+          ) : latest.length === 0 ? (
+            <p style={{ gridColumn: "1/-1" }}>暂无文章，可先启动后端并执行初始化 SQL，或直接写文章入库。</p>
+          ) : (
+            latest.map((article) => (
+              <article className="article-card" key={article.id}>
+                <div className="article-card__meta">
+                  <Tag color="geekblue">{article.tag}</Tag>
+                  <span>{article.date}</span>
+                </div>
+                <h3>{article.title}</h3>
+                <p>{article.desc}</p>
+                <button type="button" onClick={() => navigate(`/articles/${article.id}`)}>
+                  阅读全文
+                </button>
+              </article>
+            ))
+          )}
         </div>
       </section>
 

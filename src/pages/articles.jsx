@@ -1,7 +1,7 @@
-import { useMemo } from "react";
-import { Button, Card, Empty, Tag } from "antd";
+import { useEffect, useState } from "react";
+import { Alert, Button, Card, Empty, Spin, Tag } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { ARTICLE_STORAGE_KEY, defaultArticles } from "@/data/articles";
+import { request } from "@/api/client";
 import "./articles.css";
 
 const getTextFromHtml = (html) => {
@@ -12,10 +12,27 @@ const getTextFromHtml = (html) => {
 
 export const Articles = () => {
   const navigate = useNavigate();
+  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const articles = useMemo(() => {
-    const savedArticles = JSON.parse(localStorage.getItem(ARTICLE_STORAGE_KEY) || "[]");
-    return [...savedArticles, ...defaultArticles];
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    request("/api/articles")
+      .then((data) => {
+        if (!cancelled) setArticles(Array.isArray(data) ? data : []);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e instanceof Error ? e.message : "加载失败");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -24,7 +41,7 @@ export const Articles = () => {
         <div>
           <span>All Posts</span>
           <h1>鑫哥的全部文章</h1>
-          <p>这里展示已发布文章，当前先使用前端本地数据，后续可替换为后端接口。</p>
+          <p>文章列表由 Express + MySQL 接口拉取，请确保已启动 my-blog-node 并完成数据库初始化。</p>
         </div>
         <div className="articles-header__actions">
           <Button onClick={() => navigate("/home")}>返回首页</Button>
@@ -34,7 +51,13 @@ export const Articles = () => {
         </div>
       </header>
 
-      {articles.length > 0 ? (
+      {loading ? (
+        <div style={{ display: "flex", justifyContent: "center", padding: "48px 0" }}>
+          <Spin size="large" />
+        </div>
+      ) : error ? (
+        <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />
+      ) : articles.length > 0 ? (
         <section className="articles-list">
           {articles.map((article) => (
             <Card className="articles-card" key={article.id}>

@@ -1,7 +1,7 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Button, Card, Form, Input, Select, Space, message } from "antd";
 import { Link, useNavigate } from "react-router-dom";
-import { ARTICLE_STORAGE_KEY } from "@/data/articles";
+import { request } from "@/api/client";
 import "./articleEditor.css";
 
 const toolbarItems = [
@@ -15,13 +15,14 @@ const toolbarItems = [
 export const ArticleEditor = () => {
   const editorRef = useRef(null);
   const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
 
   const runCommand = (command, value) => {
     editorRef.current?.focus();
     document.execCommand(command, false, value);
   };
 
-  const handlePublish = (values) => {
+  const handlePublish = async (values) => {
     const content = editorRef.current?.innerHTML.trim();
 
     if (!content) {
@@ -29,24 +30,25 @@ export const ArticleEditor = () => {
       return;
     }
 
-    const article = {
-      id: `article-${Date.now()}`,
-      title: values.title,
-      desc: values.desc,
-      tag: values.tag,
-      date: new Intl.DateTimeFormat("zh-CN", {
-        month: "2-digit",
-        day: "2-digit",
-      }).format(new Date()),
-      author: "鑫哥",
-      content,
-    };
-
-    const savedArticles = JSON.parse(localStorage.getItem(ARTICLE_STORAGE_KEY) || "[]");
-    localStorage.setItem(ARTICLE_STORAGE_KEY, JSON.stringify([article, ...savedArticles]));
-
-    message.success("文章已发布到前端列表");
-    navigate("/articles");
+    setSubmitting(true);
+    try {
+      await request("/api/articles", {
+        method: "POST",
+        json: {
+          title: values.title,
+          desc: values.desc,
+          tag: values.tag,
+          content,
+          author: "鑫哥",
+        },
+      });
+      message.success("文章已保存到数据库");
+      navigate("/articles");
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : "发布失败");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -55,7 +57,7 @@ export const ArticleEditor = () => {
         <div>
           <span>Write Post</span>
           <h1>写一篇新的博客文章</h1>
-          <p>先完成前端编辑和发布流程，后续可以直接替换为后端接口保存。</p>
+          <p>发布后将通过接口写入 MySQL。</p>
         </div>
         <Space>
           <Link to="/home">返回首页</Link>
@@ -127,7 +129,7 @@ export const ArticleEditor = () => {
 
           <div className="editor-actions">
             <Button onClick={() => navigate("/home")}>取消</Button>
-            <Button type="primary" htmlType="submit">
+            <Button type="primary" htmlType="submit" loading={submitting}>
               发布文章
             </Button>
           </div>
