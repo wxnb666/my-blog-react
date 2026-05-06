@@ -60,7 +60,7 @@ export const ArticleEditor = () => {
           <p>发布后将通过接口写入 MySQL。</p>
         </div>
         <Space>
-          <Link to="/home">返回首页</Link>
+          <Link to="/">返回首页</Link>
           <Link to="/articles">全部文章</Link>
         </Space>
       </header>
@@ -129,7 +129,7 @@ export const ArticleEditor = () => {
           </Form.Item>
 
           <div className="editor-actions">
-            <Button onClick={() => navigate("/home")}>取消</Button>
+            <Button onClick={() => navigate("/")}>取消</Button>
             <Button type="primary" htmlType="submit" loading={submitting}>
               发布文章
             </Button>

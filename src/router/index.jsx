@@ -4,20 +4,30 @@ import { ArticleEditor } from "@/pages/articleEditor";
 import { ArticleDetail } from "@/pages/articleDetail";
 import { Articles } from "@/pages/articles";
 import { TopicArticles } from "@/pages/topicArticles";
+import { OwnerComments } from "@/pages/ownerComments";
+import { OwnerRoute } from "@/components/OwnerRoute";
 import { createBrowserRouter } from "react-router-dom";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <Login />,
+    element: <App />,
+  },
+  {
+    path: "/home",
+    element: <App />,
   },
   {
     path: "/login",
     element: <Login />,
   },
   {
-    path: "/home",
-    element: <App />,
+    path: "/owner/comments",
+    element: (
+      <OwnerRoute>
+        <OwnerComments />
+      </OwnerRoute>
+    ),
   },
   {
     path: "/topics/:slug",
@@ -29,7 +39,11 @@ export const router = createBrowserRouter([
   },
   {
     path: "/articles/write",
-    element: <ArticleEditor />,
+    element: (
+      <OwnerRoute>
+        <ArticleEditor />
+      </OwnerRoute>
+    ),
   },
   {
     path: "/articles/:articleId",

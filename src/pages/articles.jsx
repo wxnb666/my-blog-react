@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Alert, Button, Card, Empty, Spin, Tag } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { request } from "@/api/client";
+import { isOwnerSession } from "@/auth/session";
 import "./articles.css";
 
 const getTextFromHtml = (html) => {
@@ -12,6 +13,7 @@ const getTextFromHtml = (html) => {
 
 export const Articles = () => {
   const navigate = useNavigate();
+  const owner = isOwnerSession();
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -39,13 +41,15 @@ export const Articles = () => {
         <div>
           <span>All Posts</span>
           <h1>鑫哥的全部文章</h1>
-          <p>文章列表由 Express + MySQL 接口拉取，请确保已启动 my-blog-node 并完成数据库初始化。</p>
+          <p>公开文章列表；读者可直接阅读并在文末评论。</p>
         </div>
         <div className="articles-header__actions">
-          <Button onClick={() => navigate("/home")}>返回首页</Button>
-          <Button type="primary" onClick={() => navigate("/articles/write")}>
-            写新文章
-          </Button>
+          <Button onClick={() => navigate("/")}>返回首页</Button>
+          {owner ? (
+            <Button type="primary" onClick={() => navigate("/articles/write")}>
+              写新文章
+            </Button>
+          ) : null}
         </div>
       </header>
 
@@ -75,9 +79,15 @@ export const Articles = () => {
         </section>
       ) : (
         <Empty description="暂无文章">
-          <Button type="primary" onClick={() => navigate("/articles/write")}>
-            现在去写
-          </Button>
+          {owner ? (
+            <Button type="primary" onClick={() => navigate("/articles/write")}>
+              现在去写
+            </Button>
+          ) : (
+            <Button type="primary" onClick={() => navigate("/")}>
+              返回首页
+            </Button>
+          )}
         </Empty>
       )}
     </main>

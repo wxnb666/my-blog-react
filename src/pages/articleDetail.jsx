@@ -2,6 +2,7 @@ import { Button, Empty, Spin, Tag } from "antd";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { request } from "@/api/client";
+import { ArticleComments } from "./articleComments.jsx";
 import "./articleDetail.css";
 
 function stripHtml(html) {
@@ -124,7 +125,7 @@ function ArticleDetailInner({ articleId }) {
   return (
     <main className="article-detail">
       <nav className="article-detail__breadcrumb" aria-label="面包屑导航">
-        <Link to="/home">首页</Link>
+        <Link to="/">首页</Link>
         <span className="article-detail__crumb-sep" aria-hidden>
           /
         </span>
@@ -227,6 +228,8 @@ function ArticleDetailInner({ articleId }) {
           dangerouslySetInnerHTML={{ __html: article.content }}
         />
 
+        <ArticleComments articleId={articleId} />
+
         <footer className="article-detail__about-author">
           <h2 className="article-detail__about-title">关于作者</h2>
           <p className="article-detail__about-text">
@@ -236,7 +239,7 @@ function ArticleDetailInner({ articleId }) {
             <Button type="default" onClick={() => navigate("/articles")}>
               返回文章列表
             </Button>
-            <Button type="primary" onClick={() => navigate("/home")}>
+            <Button type="primary" onClick={() => navigate("/")}>
               回到首页
             </Button>
           </div>

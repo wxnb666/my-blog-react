@@ -2,10 +2,12 @@ import { Button, Card, Spin, Tag } from "antd";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { request } from "@/api/client";
+import { clearSession, isOwnerSession } from "@/auth/session";
 import "./App.css";
 
 function App() {
   const navigate = useNavigate();
+  const owner = isOwnerSession();
   const [latest, setLatest] = useState([]);
   const [topics, setTopics] = useState([]);
   const [stats, setStats] = useState({ articleCount: 0, topicCount: 0, totalViews: 0 });
@@ -57,24 +59,53 @@ function App() {
           </button>
           <a href="#topics">专题</a>
           <a href="#about">关于</a>
+          {owner ? (
+            <>
+              <button type="button" onClick={() => navigate("/articles/write")}>
+                写文章
+              </button>
+              <button type="button" onClick={() => navigate("/owner/comments")}>
+                评论管理
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearSession();
+                  navigate("/login");
+                }}
+              >
+                退出博主
+              </button>
+            </>
+          ) : (
+            <button type="button" onClick={() => navigate("/login")}>
+              博主登录
+            </button>
+          )}
         </nav>
       </header>
 
       <section className="blog-hero">
         <div className="blog-hero__text">
           <Tag color="blue">Xinge Blog</Tag>
-          <h1>欢迎来到鑫哥的博客主界面</h1>
+          <h1>欢迎来到鑫哥的博客</h1>
           <p>
-            这里会展示你的技术文章、项目复盘和灵感记录。登录后可以继续完善文章管理、
-            专题分类和个人主页能力。
+            这里是公开阅读区：你可以浏览文章、按专题查看内容，并在文章底部发表评论。博主登录后可发布文章与回复读者。
           </p>
           <div className="blog-hero__actions">
-            <Button type="primary" size="large" onClick={() => navigate("/articles/write")}>
-              开始写文章
-            </Button>
-            <Button size="large" onClick={() => navigate("/articles")}>
+            {owner ? (
+              <Button type="primary" size="large" onClick={() => navigate("/articles/write")}>
+                写文章
+              </Button>
+            ) : null}
+            <Button size="large" type={owner ? "default" : "primary"} onClick={() => navigate("/articles")}>
               查看全部文章
             </Button>
+            {!owner ? (
+              <Button size="large" onClick={() => navigate("/login")}>
+                博主登录
+              </Button>
+            ) : null}
           </div>
         </div>
 
@@ -116,7 +147,7 @@ function App() {
               <Spin />
             </div>
           ) : latest.length === 0 ? (
-            <p style={{ gridColumn: "1/-1" }}>暂无文章，可先启动后端并执行初始化 SQL，或直接写文章入库。</p>
+            <p style={{ gridColumn: "1/-1" }}>暂无文章，可先启动后端并完成数据库初始化。</p>
           ) : (
             latest.map((article) => (
               <article className="article-card" key={article.id}>

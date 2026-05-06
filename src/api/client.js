@@ -1,3 +1,5 @@
+import { getSession } from "@/auth/session";
+
 async function parseBody(res) {
   const text = await res.text();
   if (!text) return null;
@@ -9,12 +11,16 @@ async function parseBody(res) {
 }
 
 /**
- * @param {string} path - 例如 /api/...
+ * @param {string} path - like /api/...
  * @param {RequestInit & { json?: unknown }} [options]
  */
 export async function request(path, options = {}) {
   const { json, headers, ...rest } = options;
   const mergedHeaders = new Headers(headers);
+  const session = getSession();
+  if (session?.token) {
+    mergedHeaders.set("Authorization", `Bearer ${session.token}`);
+  }
   let body = rest.body;
   if (json !== undefined) {
     mergedHeaders.set("Content-Type", "application/json");

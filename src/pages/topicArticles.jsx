@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Alert, Button, Card, Empty, Spin, Tag } from "antd";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { request } from "@/api/client";
+import { isOwnerSession } from "@/auth/session";
 import "./articles.css";
 
 const getTextFromHtml = (html) => {
@@ -12,6 +13,7 @@ const getTextFromHtml = (html) => {
 
 function TopicArticlesInner({ slug, titleFromNav }) {
   const navigate = useNavigate();
+  const owner = isOwnerSession();
   const [articles, setArticles] = useState([]);
   const [topicName, setTopicName] = useState(typeof titleFromNav === "string" ? titleFromNav : "");
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ function TopicArticlesInner({ slug, titleFromNav }) {
           <p>本页仅展示该专题下的文章。</p>
         </div>
         <div className="articles-header__actions">
-          <Button onClick={() => navigate("/home")}>返回首页</Button>
+          <Button onClick={() => navigate("/")}>返回首页</Button>
           <Button onClick={() => navigate("/articles")}>全部文章</Button>
         </div>
       </header>
@@ -91,9 +93,15 @@ function TopicArticlesInner({ slug, titleFromNav }) {
         </section>
       ) : (
         <Empty description="该专题下暂无文章">
-          <Button type="primary" onClick={() => navigate("/articles/write")}>
-            写一篇
-          </Button>
+          {owner ? (
+            <Button type="primary" onClick={() => navigate("/articles/write")}>
+              写一篇
+            </Button>
+          ) : (
+            <Button type="primary" onClick={() => navigate("/articles")}>
+              看看全部文章
+            </Button>
+          )}
         </Empty>
       )}
     </main>
